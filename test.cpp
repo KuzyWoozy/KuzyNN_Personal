@@ -20,13 +20,15 @@ int main() {
     FileReader::IDX prediction_test (predictionFile_test);
 
     
-    KuzyNN::Network net {inputs_train.unit_vectorSize(), std::vector< std::tuple<int, const KuzyNN::activation::Activation&> > {std::make_tuple(30, KuzyNN::activation::LeakyRelu (0.01)), std::make_tuple(30, KuzyNN::activation::LeakyRelu (0.01)), std::make_tuple(10, KuzyNN::activation::Sigmoid())}, KuzyNN::cost::MSE (), KuzyNN::initializer::Normal (), KuzyNN::teacher::Momentum (0.001, 0.9), 1};
+    KuzyNN::Network net {inputs_train.unit_vectorSize(), std::vector< std::tuple<int, const KuzyNN::activation::Activation&> > {std::make_tuple(5, KuzyNN::activation::Sigmoid()), std::make_tuple(5, KuzyNN::activation::LeakyRelu(0.01)), std::make_tuple(10, KuzyNN::activation::Sigmoid())}, KuzyNN::cost::MSE (), KuzyNN::initializer::Normal (), KuzyNN::teacher::Momentum (0.001, 0.9), 1};
+    
     for (int index {0}; index<(inputs_train.get_elements()/batchSize); ++index) {  
-        net.train(inputs_train.read(batchSize) / 255, net.hot_encode<10>(prediction_train.read(batchSize)));         
+        net.train(inputs_train.read(1) / 255, net.hot_encode<10>(prediction_train.read(1))); 
     }
     
     net.train(inputs_train.read(inputs_train.get_elements()%batchSize) / 255, net.hot_encode<10>(prediction_train.read(prediction_train.get_elements()%batchSize)));
-
+    
+    net.print()
     std::cout << net.predict(inputs_test.read(inputs_test.get_elements()) / 255, net.hot_encode<10>(prediction_test.read(prediction_test.get_elements()))) << '\n';
 
     return 0;

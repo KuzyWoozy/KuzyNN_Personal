@@ -182,6 +182,12 @@ class Layer {
         const KuzyMatrix::Matrix<double> z_vector;
         const KuzyMatrix::Matrix<double> x_vector;
         const KuzyMatrix::Matrix<double> y_vector;
+
+        const KuzyMatrix::Matrix<double> error_w_x;
+        const KuzyMatrix::Matrix<double> error_w_b;
+        const KuzyMatrix::Matrix<double> error_w_w;
+        const KuzyMatrix::Matrix<double> error_w_z;
+        const KuzyMatrix::Matrix<double> error_w_y;
  
         const activation::Activation& f;
         const float dropout_chance;
@@ -200,6 +206,7 @@ class Layer {
         virtual void backward(KuzyMatrix::Matrix<double>& errorWoutput);
 
         void print() const;
+        void debug_print() const;
 
         KuzyMatrix::Matrix<double> get_b() const;
         KuzyMatrix::Matrix<double> get_z() const;
@@ -246,6 +253,7 @@ class Network {
         double predict(const KuzyMatrix::Matrix<double>& inputs_matrix, const KuzyMatrix::Matrix<double>& predictions_matrix);
 
         void print() const;
+        void debug_print() const;
 
         template<int X>
         KuzyMatrix::Matrix<double> hot_encode(const KuzyMatrix::Matrix<double>& mat2encode) const;

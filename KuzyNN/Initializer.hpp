@@ -1,5 +1,6 @@
 
 extern std::mt19937 seed;
+#include "math.h"
 
 
 KuzyNN::initializer::Normal& KuzyNN::initializer::Normal::init(const int& numberOfParam) const {    

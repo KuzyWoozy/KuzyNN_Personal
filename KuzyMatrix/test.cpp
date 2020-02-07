@@ -3,9 +3,11 @@
 int main() {
     
 
-    KuzyMatrix::Matrix<double> x ({10, 10, 10});
-    x.fill(10);
-
-    (x / 2).print();
+    KuzyMatrix::Matrix<double> x ({1});
+    x.fill(-10);
+    KuzyMatrix::Matrix<double> y ({1});
+    y.fill(2);
+    y.subtract(x);
+    y.print();
     return 0;
 }

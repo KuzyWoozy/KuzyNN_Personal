@@ -3,11 +3,11 @@
 KuzyNN::Network::Network(int previousNeurones, const std::vector<std::tuple<int, const activation::Activation&>>& design, const KuzyNN::cost::Cost& cost, const KuzyNN::initializer::Initializer& init, const KuzyNN::teacher::Teacher& teacher, const float& dropout): numberOfHiddenLayers {static_cast<int>(design.size())-1}, layers (new KuzyNN::Layer*[numberOfHiddenLayers+1])  {
     
     for (int layer_num {0}; layer_num<numberOfHiddenLayers; ++layer_num) { 
-        *(layers+layer_num) = new Layer(std::get<1>(design[layer_num]).clone(), previousNeurones, std::get<0>(design[layer_num]), init.init((previousNeurones*std::get<0>(design[layer_num]))+std::get<0>(design[layer_num])), teacher, dropout);
+        *(layers+layer_num) = new Layer(std::get<1>(design[layer_num]).clone(), previousNeurones, std::get<0>(design[layer_num]), init.init(previousNeurones + 1), teacher, dropout);
         previousNeurones = std::get<0>(design[layer_num]);
     }
 
-    *(layers+numberOfHiddenLayers) = new OutputLayer(std::get<1>(design[numberOfHiddenLayers]).clone(), previousNeurones, std::get<0>(design[numberOfHiddenLayers]), init.init((previousNeurones*std::get<0>(design[numberOfHiddenLayers]))+std::get<0>(design[numberOfHiddenLayers])), cost.clone(), teacher);
+    *(layers+numberOfHiddenLayers) = new OutputLayer(std::get<1>(design[numberOfHiddenLayers]).clone(), previousNeurones, std::get<0>(design[numberOfHiddenLayers]), init.init(previousNeurones + 1), cost.clone(), teacher);
 
 }
 
@@ -51,6 +51,13 @@ void KuzyNN::Network::print() const {
     for (int layer_num{0}; layer_num<=numberOfHiddenLayers; ++layer_num) {
         std::cout << "Layer: " << layer_num << '\n';
         (*(layers+layer_num))->print();
+    }
+}
+
+void KuzyNN::Network::debug_print() const {
+    for (int layer_num{0}; layer_num<=numberOfHiddenLayers; ++layer_num) {
+        std::cout << "Layer:" << layer_num << '\n';
+        (*(layers+layer_num))->debug_print();
     }
 }
 

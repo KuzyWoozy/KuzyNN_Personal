@@ -7,7 +7,7 @@ void KuzyNN::Layer::z_calculate(KuzyMatrix::Matrix<double>& x_vector) {
     x_vector.replace(y_vector);
 }
 
-KuzyNN::Layer::Layer(const KuzyNN::activation::Activation& func, const int& layerSize_prev, const int& layerSize_this, const KuzyNN::initializer::Initializer& weightInit, const teacher::Teacher& teacher, const float& dropout) : b_vector {{layerSize_this}}, b_teacher {teacher.bind(b_vector)}, w_matrix {{layerSize_this, layerSize_prev}}, w_teacher {teacher.bind(w_matrix)}, z_vector {{layerSize_this}}, x_vector {{layerSize_prev}}, y_vector {{layerSize_this}}, f{func}, dropout_chance {dropout}{
+KuzyNN::Layer::Layer(const KuzyNN::activation::Activation& func, const int& layerSize_prev, const int& layerSize_this, const KuzyNN::initializer::Initializer& weightInit, const teacher::Teacher& teacher, const float& dropout) : b_vector {{layerSize_this}}, b_teacher {teacher.bind(b_vector)}, w_matrix {{layerSize_this, layerSize_prev}}, w_teacher {teacher.bind(w_matrix)}, z_vector {{layerSize_this}}, x_vector {{layerSize_prev}}, y_vector {{layerSize_this}},error_w_x {{layerSize_prev}}, error_w_b {{layerSize_this}}, error_w_w {{layerSize_this, layerSize_prev}}, error_w_z {{layerSize_this}}, error_w_y {{layerSize_this}}, f{func}, dropout_chance {dropout}{
     weightInit.initialize(b_vector);
     weightInit.initialize(w_matrix);
     
@@ -35,33 +35,34 @@ void KuzyNN::Layer::forward(KuzyMatrix::Matrix<double>& x_vector) {
 
 void KuzyNN::Layer::backward(KuzyMatrix::Matrix<double>& errorWoutput_vector) {
     assert(forward_direction && "Forward propogate first!");
+    
+    error_w_y = errorWoutput_vector;
 
     KuzyMatrix::Matrix<double> z_vector {this->z_vector};
 
     f.backward(z_vector);
     // Error with respect to z
-    z_vector.multiply(errorWoutput_vector);
+    error_w_z = z_vector * error_w_y;
 
-    KuzyMatrix::Matrix<double> errorWoutput_new_vector {{w_matrix.get_shape()[1]}};
     KuzyMatrix::Matrix<double> buffer_y_vector {{w_matrix.get_shape()[0]}};
     for (int index_x{0}; index_x<w_matrix.get_shape()[1]; ++index_x) {
         for (int index_y{0}; index_y<w_matrix.get_shape()[0]; ++index_y) {
             buffer_y_vector.index<double>(index_y) = w_matrix.index<double>({index_y, index_x});
         }
-        errorWoutput_new_vector.index<double>(index_x) = (buffer_y_vector * z_vector).sum();
+        error_w_x.index<double>(index_x) = (buffer_y_vector * error_w_z).sum();
     }
-    errorWoutput_vector.replace(errorWoutput_new_vector);
+    errorWoutput_vector.replace(error_w_x);
 
     // Update bias
-    b_teacher.update(z_vector);
+    error_w_b = error_w_z;
+    b_teacher.update(error_w_b);
     // Update weights
-    KuzyMatrix::Matrix<double> wWerror_matrix {w_matrix.get_shape()};
     KuzyMatrix::Matrix<double> buffer_x_vector {{w_matrix.get_shape()[1]}};
     for (int index{0}; index<w_matrix.get_shape()[0]; ++index) {
         buffer_x_vector.fill(z_vector.index<double>(index));
-        wWerror_matrix.index<KuzyMatrix::Matrix<double>>(index) = x_vector * buffer_x_vector;
+        error_w_w.index<KuzyMatrix::Matrix<double>>(index) = x_vector * buffer_x_vector;
     }
-    w_teacher.update(wWerror_matrix);
+    w_teacher.update(error_w_w);
     forward_direction=false;
 }
 
@@ -78,6 +79,20 @@ void KuzyNN::Layer::print() const {
     y_vector.print();
     std::cout << "--------------------\n";
 }
+
+void KuzyNN::Layer::debug_print() const {
+    std::cout << "error_w_input\n";
+    error_w_x.print();
+    std::cout << "error_w_bias\n";
+    error_w_b.print();
+    std::cout << "error_w_weight\n";
+    error_w_w.print();
+    std::cout << "error_w_z\n";
+    error_w_z.print();
+    std::cout << "error_w_output\n";
+    error_w_y.print();
+}
+
 
 KuzyMatrix::Matrix<double> KuzyNN::Layer::get_b() const {
     return b_vector;
@@ -114,7 +129,6 @@ void KuzyNN::OutputLayer::forward(KuzyMatrix::Matrix<double>& x_vector) {
 }
 
 void KuzyNN::OutputLayer::backward(KuzyMatrix::Matrix<double>& predictions_vector) {
-    // Error with respect to z 
     predictions_vector = cost.error(y_vector, predictions_vector);
     KuzyNN::Layer::backward(predictions_vector);
 }
