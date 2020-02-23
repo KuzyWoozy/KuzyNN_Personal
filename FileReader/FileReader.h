@@ -36,7 +36,7 @@ namespace FileReader {
 
         public:
             IDX(const std::string& filePath);
-
+            ~IDX();
             KuzyMatrix::Matrix<double> read(const int& numberOfElements) override;
     
     };

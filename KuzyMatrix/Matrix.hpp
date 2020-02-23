@@ -248,6 +248,41 @@ T Matrix<T>::max() const {
     }
 }
 
+template<class T>
+std::vector<int> Matrix<T>::max_index() const {
+    if (shape.size() == 1) {
+        T max {0};
+        std::vector<int> max_index {0};
+        for (int index {0}; index<shape[0]; ++index) {
+            if (this->index<T>(index) > max) {
+                max = this->index<T>(index);
+                max_index[0] = index;
+            }
+        }
+        return max_index;
+    }
+    else {
+        T max {0};
+        T contender;
+        std::vector<int> max_index (shape.size(), 0);
+        
+        for (int index{0}; index<shape[0]; ++index) {
+            contender = this->index<Matrix<T>>(index).max(); 
+            if (contender > max) {
+                max = contender;
+                max_index[0] = index;
+                std::vector<int> max_path = this->index<Matrix<T>>(index).max_index();
+                for (int index{0}; index<static_cast<int>(max_path.size()); ++index) {
+                   max_index[index+1] = max_path[index]; 
+                }
+                
+            }
+        }
+        return max_index;
+    }
+}
+
+
 
 
 
@@ -459,66 +494,74 @@ void Matrix<T>::operator/=(const T& value) const {
 
 template<class T>
 Matrix<T> Matrix<T>::operator+(const T& value) const {
-
     if (shape.size() == 1) {
+        Matrix<T> mat_2_return {shape};
         for (int index{0}; index<shape[0]; ++index) {
-            this->index<T>(index) += value;
+            mat_2_return.index<T>(index) = this->index<T>(index) + value;
         }
+        return mat_2_return;
     }
     else {
+        Matrix<T> mat_2_return {shape};
         for (int index {0}; index<shape[0]; ++index) {
-            this->index<Matrix<T>>(index) += value; 
-        }
+            mat_2_return.index<Matrix<T>>(index) = this->index<Matrix<T>>(index) + value; 
+        } 
+        return mat_2_return;
     }
-    return *this;
 }
 
 template<class T>
 Matrix<T> Matrix<T>::operator-(const T& value) const {
-
     if (shape.size() == 1) {
+        Matrix<T> mat_2_return {shape};
         for (int index{0}; index<shape[0]; ++index) {
-            this->index<T>(index) -= value;
+            mat_2_return.index<T>(index) = this->index<T>(index) - value;
         }
+        return mat_2_return;
     }
     else {
+        Matrix<T> mat_2_return {shape};
         for (int index {0}; index<shape[0]; ++index) {
-            this->index<Matrix<T>>(index) -= value; 
-        }
+            mat_2_return.index<Matrix<T>>(index) = this->index<Matrix<T>>(index) - value; 
+        } 
+        return mat_2_return;
     }
-    return *this;
 }
 
 template<class T>
 Matrix<T> Matrix<T>::operator*(const T& value) const {
-
     if (shape.size() == 1) {
+        Matrix<T> mat_2_return {shape};
         for (int index{0}; index<shape[0]; ++index) {
-            this->index<T>(index) *= value;
+            mat_2_return.index<T>(index) = this->index<T>(index) * value;
         }
+        return mat_2_return;
     }
     else {
+        Matrix<T> mat_2_return {shape};
         for (int index {0}; index<shape[0]; ++index) {
-            this->index<Matrix<T>>(index) *= value; 
-        }
+            mat_2_return.index<Matrix<T>>(index) = this->index<Matrix<T>>(index) * value; 
+        } 
+        return mat_2_return;
     }
-    return *this;
 }
 
 template<class T>
 Matrix<T> Matrix<T>::operator/(const T& value) const {
-
     if (shape.size() == 1) {
+        Matrix<T> mat_2_return {shape};
         for (int index{0}; index<shape[0]; ++index) {
-            this->index<T>(index) /= value;
+            mat_2_return.index<T>(index) = this->index<T>(index) / value;
         }
+        return mat_2_return;
     }
     else {
+        Matrix<T> mat_2_return {shape};
         for (int index {0}; index<shape[0]; ++index) {
-            this->index<Matrix<T>>(index) /= value; 
-        }
+            mat_2_return.index<Matrix<T>>(index) = this->index<Matrix<T>>(index) / value; 
+        } 
+        return mat_2_return;
     }
-    return *this;
 }
 
 

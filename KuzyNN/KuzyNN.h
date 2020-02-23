@@ -14,22 +14,18 @@ namespace KuzyNN {
 
 namespace activation {
 class Activation {
-    private:
-        virtual double apply_forward(const double& z) const = 0;
-        virtual double apply_backward(const double& z) const = 0;
-
     public:
-        void forward(const KuzyMatrix::Matrix<double>& z_vector) const;
-        void backward(const KuzyMatrix::Matrix<double>& z_vector) const;
+        virtual void forward(const KuzyMatrix::Matrix<double>& z_vector) const = 0;
+        virtual void backward(const KuzyMatrix::Matrix<double>& z_vector) const = 0;
         virtual Activation& clone() const = 0;
         virtual ~Activation() {};
 };
 
 class Relu : public Activation {
-    private:
-        double apply_forward(const double& z) const override;
-        double apply_backward(const double& z) const override;
     public:
+        void forward(const  KuzyMatrix::Matrix<double>& z_vector) const override;
+        void backward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+
         Relu() {};
         Relu& clone() const override;
 };
@@ -37,31 +33,42 @@ class Relu : public Activation {
 class LeakyRelu : public Activation {
     private:
         double leaky_num;
-        double apply_forward(const double& z) const override;
-        double apply_backward(const double& z) const override;
-    
+            
     public:
+        void forward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+        void backward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+
         LeakyRelu(const double& leaky_param);
         LeakyRelu& clone() const override;
 };
 
 
 class TanH : public Activation {
-    private:
-        double apply_forward(const double& z) const override;
-        double apply_backward(const double& z) const override;
     public:
+        void forward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+        void backward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+        
         TanH() {};
         TanH& clone() const override;
 };
 
 class Sigmoid : public Activation {
-    private:
-        double apply_forward(const double& z) const override;
-        double apply_backward(const double& z) const override;
     public:
+        void forward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+        void backward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+
         Sigmoid() {};
         Sigmoid& clone() const override;
+};
+
+class Softmax : public Activation {
+    public:
+        void forward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+        void backward(const KuzyMatrix::Matrix<double>& z_vector) const override;
+
+        Softmax() {};
+        Softmax& clone() const override;
+
 };
 
 }
@@ -86,7 +93,22 @@ class Normal : public Initializer {
         Normal(const int& numberOfParam) : Initializer {numberOfParam} {};
  
         void initialize(const KuzyMatrix::Matrix<double>& mat2init) const override;
-        Normal& init(const int& numberOfParam) const;
+        Normal& init(const int& numberOfParam) const override;
+};
+
+class Uniform : public Initializer {
+    public:
+        Uniform() {}
+        void initialize(const KuzyMatrix::Matrix<double>& mat2initialize) const override;
+        Uniform& init(const int& numberOfParam) const override;
+};
+
+class Static : public Initializer {
+    public:
+        Static() {};
+        Static(const int& numberOfParam) : Initializer(numberOfParam) {};
+        void initialize(const KuzyMatrix::Matrix<double>& mat2initialize) const override;
+        Static& init(const int& numberOfParam) const override;
 };
 
 }
@@ -114,16 +136,24 @@ class MSE : public Cost {
         MSE& clone() const override;
 };
 
+class Log: public Cost {
+    private:
+        double apply_forward(const double& output, const double& predict) const override;
+        double apply_backward(const double& output, const double& predict) const override;
+    public:
+        Log& clone() const override;
+};
+
 }
 
 namespace teacher {
 
 class Teacher {
     protected:
-        const float& stepValue;
+        const double& stepValue;
 
     public:
-        Teacher(const float& stepValue);
+        Teacher(const double& stepValue);
         virtual void update(const KuzyMatrix::Matrix<double>& paramWerror) const = 0;
         virtual Teacher& bind(const KuzyMatrix::Matrix<double>& mat2teach) const = 0;
         virtual ~Teacher() {};
@@ -133,30 +163,27 @@ class Teacher {
 
 class SGD : public Teacher {
     private:
-        const KuzyMatrix::Matrix<double>* param {0};
+        const KuzyMatrix::Matrix<double>* param;
         const KuzyMatrix::Matrix<double> buffer;
-        SGD(const float& stepValue, const KuzyMatrix::Matrix<double>& mat2teach);
+        SGD(const double& stepValue, const KuzyMatrix::Matrix<double>& mat2teach);
 
     public:
-        SGD(const float& stepValue);
+        SGD(const double& stepValue);
         void update(const KuzyMatrix::Matrix<double>& paramWerror) const override;
         SGD& bind(const KuzyMatrix::Matrix<double>& mat2teach) const override;
 };
 
 class Momentum : public Teacher {
     private: 
-        const float& momentum_friction;
-        
-        const KuzyMatrix::Matrix<double>* param {0};
+        const double& momentum;
 
-        const KuzyMatrix::Matrix<double> buffer_step;
-        const KuzyMatrix::Matrix<double> buffer_momentum;
+        const KuzyMatrix::Matrix<double>* param;
         const KuzyMatrix::Matrix<double> buffer_prev;
 
-        Momentum(const float& stepValue, const float& momentum_friction, const KuzyMatrix::Matrix<double>& mat2teach);
+        Momentum(const double& stepValue, const double& momentum_friction, const KuzyMatrix::Matrix<double>& mat2teach);
 
     public:
-        Momentum(const float& stepValue, const float& momentum_friction);
+        Momentum(const double& stepValue, const double& momentum_friction);
 
         void update(const KuzyMatrix::Matrix<double>& paramWerror) const override;
 
@@ -167,7 +194,7 @@ class Momentum : public Teacher {
 
 namespace regularization {
 
-KuzyMatrix::Matrix<double> Dropout(const int& layerSize, const float& dropout_chance);
+KuzyMatrix::Matrix<double> Dropout(const int& layerSize, const float& dropout_chance, const bool& training);
 
 }
 
@@ -188,7 +215,7 @@ class Layer {
         const KuzyMatrix::Matrix<double> error_w_w;
         const KuzyMatrix::Matrix<double> error_w_z;
         const KuzyMatrix::Matrix<double> error_w_y;
- 
+
         const activation::Activation& f;
         const float dropout_chance;
         // true == forward, false == backwards
@@ -202,7 +229,7 @@ class Layer {
 
         virtual ~Layer();
 
-        virtual void forward(KuzyMatrix::Matrix<double>& x_vector);
+        virtual void forward(KuzyMatrix::Matrix<double>& x_vector, const bool& training);
         virtual void backward(KuzyMatrix::Matrix<double>& errorWoutput);
 
         void print() const;
@@ -212,8 +239,9 @@ class Layer {
         KuzyMatrix::Matrix<double> get_z() const;
         KuzyMatrix::Matrix<double> get_x() const;
         KuzyMatrix::Matrix<double> get_y() const;
-
         KuzyMatrix::Matrix<double> get_w() const;
+        KuzyMatrix::Matrix<double> get_error_w_z() const;
+        KuzyMatrix::Matrix<double> get_error_w_y() const;
 
 };
 
@@ -226,11 +254,12 @@ class OutputLayer : public Layer {
         OutputLayer(const activation::Activation& f, const int& layerSize_prev, const int& layerSize_this, const initializer::Initializer& init, const cost::Cost& cost, const teacher::Teacher& teacher);
         ~OutputLayer() override; 
 
-        void forward(KuzyMatrix::Matrix<double>& x_vector) override;
+        void forward(KuzyMatrix::Matrix<double>& x_vector, const bool& training) override;
         // Will handle the cost func too!
         void backward(KuzyMatrix::Matrix<double>& expected_vector) override;
         
-        double get_error(const KuzyMatrix::Matrix<double>& prediction) const;
+        KuzyMatrix::Matrix<double> get_error(const KuzyMatrix::Matrix<double>& prediction) const;
+        double get_avgError(const KuzyMatrix::Matrix<double>& prediction) const;
 };
 
 
@@ -240,20 +269,25 @@ class Network {
         const int numberOfHiddenLayers;
         Layer** layers;
 
-        void forward(KuzyMatrix::Matrix<double> input_vector);
+
+        void forward(KuzyMatrix::Matrix<double> input_vector, const bool& training);
+      
         void backward(KuzyMatrix::Matrix<double> predictions_vector);
 
-        double get_error(const KuzyMatrix::Matrix<double>& prediction_matrix) const;
+        
 
     public:
         Network(int numberOfInputs, const std::vector<std::tuple<int, const activation::Activation&>>& design, const cost::Cost& cost, const initializer::Initializer& init, const teacher::Teacher& teacher, const float& dropout=1);
         ~Network();
+
+        double get_error(const KuzyMatrix::Matrix<double>& input_vector, const KuzyMatrix::Matrix<double>& prediction_vector);
 
         void train(const KuzyMatrix::Matrix<double>& inputs_matrix, const KuzyMatrix::Matrix<double>& predictions_matrix);
         double predict(const KuzyMatrix::Matrix<double>& inputs_matrix, const KuzyMatrix::Matrix<double>& predictions_matrix);
 
         void print() const;
         void debug_print() const;
+        void derivitive_print() const;
 
         template<int X>
         KuzyMatrix::Matrix<double> hot_encode(const KuzyMatrix::Matrix<double>& mat2encode) const;

@@ -1,13 +1,12 @@
 #include "KuzyMatrix.h"
+#include <vector>
+#include <iostream>
 
 int main() {
     
 
-    KuzyMatrix::Matrix<double> x ({1});
-    x.fill(-10);
-    KuzyMatrix::Matrix<double> y ({1});
-    y.fill(2);
-    y.subtract(x);
-    y.print();
+    KuzyMatrix::Matrix<double> x ({3});
+    x.fill(3);
+    std::cout << x.max() << '\n';
     return 0;
 }

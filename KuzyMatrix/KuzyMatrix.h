@@ -45,6 +45,7 @@ namespace KuzyMatrix {
             // Math
             T sum() const;
             T max() const;
+            std::vector<int> max_index() const;
             Matrix<T> operator+(const Matrix<T>& mat2add) const;
             Matrix<T> operator-(const Matrix<T>& mat2subtract) const;
             Matrix<T> operator*(const Matrix<T>& mat2multiply) const;

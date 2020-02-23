@@ -35,3 +35,7 @@ KuzyMatrix::Matrix<double> IDX::read(const int& numberOfElements) {
 
     return mat;
 }
+
+IDX::~IDX() {
+    delete[] buffer;
+}
