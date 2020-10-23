@@ -23,7 +23,7 @@ Reader class provides an abstract base, which can be extended to provide custom 
     Compiles the test.cpp with the KuzyNN library
 
   make run
-    Runs the test.cpp executable with the KuzyNN library (Outputs current error)
+    Runs the test.cpp executable with the KuzyNN library (Outputs network error)
 
   make clean
     Cleans directory of any non-essential files
